@@ -19,6 +19,7 @@ import (
 type ulong int32
 type ulong_ptr uintptr
 
+// 获取 Windows进程列表结构体
 type PROCESSENTRY32 struct {
 	dwSize              ulong
 	cntUsage            ulong
@@ -33,8 +34,10 @@ type PROCESSENTRY32 struct {
 }
 
 func main() {
+	// 设定输出 Log 名字               是否文件输出
 	SetOutputFileLog("MyAutoGuardian", true)
 
+	// 判断后台参数是否为 2个
 	if len(os.Args) == 2 {
 		Notice(os.Args)
 	} else {
@@ -42,19 +45,23 @@ func main() {
 		return
 	}
 
+	//　判断守护进程是否挂掉
 	result, err := IsHave(os.Args[1])
 	n := 0
 
+	// 每秒监控一次
 	for ; ; time.Sleep(time.Second) {
 		result, err = IsHave(os.Args[1])
 		if err != nil {
 			Error(err)
 			continue
 		}
+		// 进程挂掉
 		if !result {
 			Warn(os.Args[1], " Restarting!!! time:", n)
 			n++
 
+			// 重启
 			cmd := exec.Command(os.Args[1])
 			err = cmd.Run()
 			if err != nil {
@@ -66,6 +73,7 @@ func main() {
 	Notice("My Jobs Is Over!!!")
 }
 
+// 调用WinAPI 获取进程列表
 func IsHave(key string) (result bool, err error) {
 	kernel32 := syscall.NewLazyDLL("kernel32.dll")
 	CreateToolhelp32Snapshot := kernel32.NewProc("CreateToolhelp32Snapshot")

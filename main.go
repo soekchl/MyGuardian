@@ -48,17 +48,19 @@ func main() {
 	//　判断守护进程是否挂掉
 	result, err := IsHave(os.Args[1])
 	n := 0
+	var sleep_time time.Duration = 1
 
 	// 每秒监控一次
-	for ; ; time.Sleep(time.Second) {
+	for ; ; time.Sleep(time.Second * sleep_time) {
 		result, err = IsHave(os.Args[1])
 		if err != nil {
 			Error(err)
+			n = 0
 			continue
 		}
 		// 进程挂掉
 		if !result {
-			Warn(os.Args[1], " Restarting!!! time:", n)
+			Warn(os.Args[1], " Restarting!!! times:", n)
 			n++
 
 			// 重启
@@ -67,6 +69,13 @@ func main() {
 			if err != nil {
 				Error(err)
 				continue
+			}
+		}
+
+		if n > 10 {
+			sleep_time = time.Duration(n - 10)
+			if sleep_time > 5 {
+				sleep_time = 5
 			}
 		}
 	}
